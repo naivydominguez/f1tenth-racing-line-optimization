@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.DS_Store
+results/*.log
+# external repos (clone next to this repo, not inside it)
+f1tenth_gym/
+f1tenth_racetracks/
+# colcon build output if the ROS package is built in place
+build/
+install/
+log/

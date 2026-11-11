@@ -1,0 +1,6 @@
+image: varwidth_s1_map.png
+resolution: 0.05
+origin: [-11.429418098613016, -9.187818591497619, 0.0]
+negate: 0
+occupied_thresh: 0.45
+free_thresh: 0.196

@@ -1,0 +1,77 @@
+# ============================================================================================
+#  Racing-line optimizer parameters  (F1TENTH, Team 1)
+#  Defaults = f1tenth_gym vehicle; every "TUNE" line is something to measure / adjust on the car.
+#  How to measure each TUNE value on the real car is in README.md -> "Tuning on the car".
+# ============================================================================================
+
+vehicle:
+  lf: 0.15875            # CG -> front axle [m]
+  lr: 0.17145            # CG -> rear axle [m]          (wheelbase = lf + lr = 0.33 m)
+  mass: 3.74             # [kg]                         TUNE (weigh the car with battery)
+  I_z: 0.04712           # yaw inertia [kg m^2]
+  h_cg: 0.074            # CG height [m] (load transfer under braking/accel)
+  width: 0.31            # [m] body width (used for wall clearance)
+  length: 0.58           # [m]
+  C_Sf: 4.718            # front cornering stiffness coefficient [1/rad] (gym ST model)
+  C_Sr: 5.4562           # rear cornering stiffness coefficient [1/rad]
+  mu_stiffness: 1.0489   # gym's 'mu' (it scales cornering stiffness in the ST model)
+
+limits:
+  mu: 1.0                # TUNE  tyre-floor friction coefficient (circle test, tools/calibrate_mu.py)
+                         #       f1tenth_gym nominal ~1.05; a smooth hallway floor is often 0.5-0.8
+  friction_usage: 0.85   # TUNE  share of mu the planner may use (drift margin). a_lat_max = usage*mu*g
+                         #       -> "max speed before drift" in a corner of radius R: sqrt(usage*mu*g*R)
+                         #       Saturating-tyre sim (true mu 0.7): planning with 100% of mu slid into the
+                         #       wall in 5 of 6 runs, ~86% still crashed every min-time line, ~71% never
+                         #       crashed. Start the car at 0.7.
+  v_max: 8.0             # TUNE  top-speed cap [m/s] (ERPM limit / how brave you are)
+  a_accel_max: 9.51      # motor acceleration limit [m/s^2] (gym a_max)
+  v_switch: 7.319        # above this speed accel is power-limited: a <= a_accel_max * v_switch / v
+  a_brake_max: 8.0       # TUNE  braking deceleration cap [m/s^2] (also capped by mu*g)
+  delta_max: 0.4189      # TUNE  max steering angle [rad] (24 deg). Min turn radius = L / tan(delta_max)
+                         #       your car config clips at 0.36 rad -> set 0.36 for the car
+  delta_rate_max: 3.2    # TUNE  steering servo rate [rad/s]
+  ggv_exponent: 2.0      # friction-ellipse shape for the speed profile (2 = ellipse, 1 = diamond = safer)
+
+track:
+  ds: 0.1                # reference-line resampling step [m]
+  ref_smoothing: 0.03    # RMS smoothing of the reference line [m] (raise for noisy SLAM centre lines)
+  wall_margin: 0.20      # TUNE  clearance kept from walls beyond half the car width [m]
+                         #       = localisation error + tracking error. Lower = faster, riskier.
+                         #       Sim sweep: 0.15 crashed at 5 cm pose noise, 0.30 never did; ~1.4 %
+                         #       lap time per +5 cm. Start the real car at 0.30.
+
+mincurv:                 # minimum-curvature QP (Heilmeier et al. 2020) - warm start & fallback
+  iterations: 3          # re-linearisations of the curvature around the previous solution
+  ds: 0.25               # optimisation grid [m]
+  limit_curvature: true  # enforce |kappa| <= tan(delta_max)/L on the racing line
+
+mintime:                 # time-optimal OCP (Christ et al. 2019 style, dynamic single-track + friction)
+  ds: 0.25               # shooting-interval length [m]; N = track length / ds (300-500 intervals)
+  rk4_steps: 1           # RK4 sub-steps per shooting interval
+  w_steer_rate: 0.01     # [s] weight on mean (steer rate / max)^2 - smooths steering
+  w_accel_rate: 0.01     # [s] weight on mean (delta a / a_max)^2 - smooths throttle/brake
+  v_min: 1.0             # [m/s] keep away from the singular low-speed region of the dynamic model
+  xi_max: 0.8            # [rad] max heading difference to the reference line. Larger lets IPOPT exploit
+                         #       the discretisation on hairpins (kinked lines); solutions are also checked
+  max_iter: 3000
+  print_level: 0         # IPOPT verbosity (5 = full log)
+
+controller:              # pure pursuit (same law as our Lab 5 node)
+  lookahead_min: 0.4     # TUNE  L = clip(L_min + gain * v, L_min, L_max)   [m]
+  lookahead_gain: 0.1    # TUNE  [s]
+  lookahead_max: 2.0     # TUNE  [m]
+  speed_scale: 1.0       # TUNE  global multiplier on the speed profile (ramp 0.4 -> 1.0 on the car)
+  slip_compensation: 1.0 # TUNE  0 = plain Lab-5 pure pursuit; 1 = add steady-state side-slip/understeer
+                         #       feed-forward (stops the car running wide in fast corners). Start at 0
+                         #       on the car, raise toward 1 if it runs wide at the corner exits.
+
+sim:
+  dt: 0.01               # physics step [s] (same as f1tenth_gym)
+  laps: 10
+  steer_delay_steps: 2   # actuation delay in physics steps (gym uses a 2-step steering buffer)
+  pose_noise_xy: 0.02    # [m]  std of localisation noise fed to the controller (particle filter-ish)
+  pose_noise_yaw: 0.01   # [rad]
+  pose_rate_hz: 40       # controller / localisation rate
+  tire_model: gym        # gym = f1tenth_gym linear-tyre ST model; pacejka = saturating tyres (can drift)
+  mu_true: 1.0           # real friction used by the pacejka model (the planner does not know it)

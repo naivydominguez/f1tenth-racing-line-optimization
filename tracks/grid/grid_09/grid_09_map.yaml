@@ -1,0 +1,6 @@
+image: grid_09_map.png
+resolution: 0.05
+origin: [-10.592003110254906, -3.0929058548234076, 0.0]
+negate: 0
+occupied_thresh: 0.45
+free_thresh: 0.196

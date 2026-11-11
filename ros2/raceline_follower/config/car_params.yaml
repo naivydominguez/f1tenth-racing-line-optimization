@@ -1,0 +1,17 @@
+raceline_follower:
+  ros__parameters:
+    pose_topic: /pf/pose/odom
+    pose_msg_type: odom
+    drive_topic: /drive
+    frame_id: map
+    wheelbase: 0.33
+    max_steer: 0.36          # same clip as our Lab-5 car config
+    lookahead_min: 0.6       # a bit longer than sim (PF pose is noisier than gym ground truth)
+    lookahead_gain: 0.15
+    lookahead_max: 2.0
+    use_csv_speed: true
+    v_max: 4.0               # hard cap on the command, whatever the CSV says
+    v_min: 0.8
+    speed_scale: 0.4         # ramp 0.4 -> 0.6 -> 0.8 -> 1.0 only after 5 clean laps each
+    slip_compensation: 0.0   # raise toward 1.0 if the car runs wide at corner exits
+    steer_slowdown: false

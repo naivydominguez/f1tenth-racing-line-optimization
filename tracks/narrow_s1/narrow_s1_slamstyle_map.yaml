@@ -1,0 +1,6 @@
+image: narrow_s1_slamstyle_map.png
+resolution: 0.05
+origin: [-9.848261074276959, -7.253245028462084, 0.0]
+negate: 0
+occupied_thresh: 0.45
+free_thresh: 0.196

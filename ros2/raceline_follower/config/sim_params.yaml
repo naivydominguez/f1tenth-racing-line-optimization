@@ -1,0 +1,16 @@
+raceline_follower:
+  ros__parameters:
+    pose_topic: /ego_racecar/odom
+    pose_msg_type: odom
+    drive_topic: /drive
+    frame_id: map
+    wheelbase: 0.33
+    max_steer: 0.4189
+    lookahead_min: 0.4
+    lookahead_gain: 0.1
+    lookahead_max: 2.0
+    use_csv_speed: true
+    v_max: 10.0
+    speed_scale: 1.0
+    slip_compensation: 1.0   # gym tyres are soft: without this the car runs wide in fast corners
+    steer_slowdown: false
